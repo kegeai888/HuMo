@@ -2,7 +2,7 @@
 <h1> HuMo: Human-Centric Video Generation via Collaborative Multi-Modal Conditioning </h1>
 </div>
 
-<div style="text-align: center;">
+<div align="center">
   <a href="https://arxiv.org/abs/2509.08519">
     <img src="https://img.shields.io/badge/arXiv%20paper-2502.11079-b31b1b.svg">
   </a>
