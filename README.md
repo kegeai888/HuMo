@@ -1,22 +1,16 @@
 <div align="center">
 <h1> HuMo: Human-Centric Video Generation via Collaborative Multi-Modal Conditioning </h1>
-</div>
 
-<div align="center">
-  <a href="https://arxiv.org/abs/2509.08519">
-    <img src="https://img.shields.io/badge/arXiv%20paper-2502.11079-b31b1b.svg">
-  </a>
-  <a href="https://phantom-video.github.io/HuMo/">
-    <img src="https://img.shields.io/badge/Project_page-More_visualizations-green">
-  </a>
-  <a href="https://huggingface.co/bytedance-research/HuMo">
-    <img src="https://img.shields.io/static/v1?label=%F0%9F%A4%97%20Hugging%20Face&message=Model&color=orange">
-  </a>
-</div>
+<a href="https://arxiv.org/abs/2509.08519">
+  <img src="https://img.shields.io/badge/arXiv%20paper-2502.11079-b31b1b.svg">
+</a>
+<a href="https://phantom-video.github.io/HuMo/">
+  <img src="https://img.shields.io/badge/Project_page-More_visualizations-green">
+</a>
+<a href="https://huggingface.co/bytedance-research/HuMo">
+  <img src="https://img.shields.io/static/v1?label=%F0%9F%A4%97%20Hugging%20Face&message=Model&color=orange">
+</a>
 
-<div align="center">
-
-[**HuMo: Human-Centric Video Generation via Collaborative Multi-Modal Conditioning**](https://arxiv.org/abs/2509.08519)<br>
 [Liyang Chen](https://scholar.google.com/citations?user=jk6jWXgAAAAJ&hl)<sup> * </sup>, [Tianxiang Ma](https://tianxiangma.github.io/)<sup> * </sup>, [Jiawei Liu](https://scholar.google.com/citations?user=X21Fz-EAAAAJ), [Bingchuan Li](https://scholar.google.com/citations?user=ac5Se6QAAAAJ)<sup>&dagger;</sup>, <br>[Zhuowei Chen](https://scholar.google.com/citations?user=ow1jGJkAAAAJ), [Lijie Liu](https://liulj13.github.io/), [Xu He](https://scholar.google.com/citations?user=KMrFk2MAAAAJ&hl), [Gen Li](https://scholar.google.com/citations?user=wqA7EIoAAAAJ), [Qian He](https://scholar.google.com/citations?user=9rWWCgUAAAAJ), [Zhiyong Wu](https://scholar.google.com/citations?user=7Xl6KdkAAAAJ)<sup> § </sup><br>
 <sup> * </sup>Equal contribution, <sup> &dagger; </sup>Project lead, <sup> § </sup>Corresponding author  
 Tsinghua University | Intelligent Creation Team, ByteDance
