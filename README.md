@@ -24,7 +24,7 @@ HuMo is a unified, human-centric video generation framework designed to produce 
 
 ## 📑 Todo List
 - [x] Release Paper
-- [ ] Checkpoint of HuMo-17B
+- [x] Checkpoint of HuMo-17B
 - [x] Inference Codes
   - [ ] Text-Image Input
   - [x] Text-Audio Input
@@ -126,4 +126,4 @@ If you find this project useful for your research, please consider citing our [p
 ```
 
 ## 📧 Contact
-If you have any comments or questions regarding this open-source project, please open a new issue or contact [Liyang Chen](lyangchen@outlook.com).
+If you have any comments or questions regarding this open-source project, please open a new issue or contact [Liyang Chen](lyangchen@outlook.com) and [Tianxiang Ma](https://tianxiangma.github.io/).
