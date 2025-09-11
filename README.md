@@ -2,7 +2,7 @@
 
 <div align="center">
   
-[![arXiv](https://img.shields.io/badge/arXiv%20paper-2502.11079-b31b1b.svg)](https://arxiv.org/abs/xxx)&nbsp;
+[![arXiv](https://img.shields.io/badge/arXiv%20paper-2502.11079-b31b1b.svg)](https://arxiv.org/abs/2509.08519)&nbsp;
 [![project page](https://img.shields.io/badge/Project_page-More_visualizations-green)](https://phantom-video.github.io/HuMo/)&nbsp;
 <a href="https://huggingface.co/bytedance-research/HuMo"><img src="https://img.shields.io/static/v1?label=%F0%9F%A4%97%20Hugging%20Face&message=Model&color=orange"></a>
 </div>
@@ -25,15 +25,16 @@ HuMo is a unified, human-centric video generation framework designed to produce 
 > - **​​VideoGen from Text-Image-Audio**​​ - Achieve the higher level of customization and control by combining text, image, and audio guidance.
 
 ## 📑 Todo List
-- [ ] Release Paper
+- [x] Release Paper
 - [ ] Checkpoint of HuMo-17B
 - [x] Inference Codes
   - [ ] Text-Image Input
   - [x] Text-Audio Input
   - [x] Text-Image-Audio Input
 - [x] Multi-GPU Inference
-- [ ] Release Prompts to Generate Demo of ***Faceless Thrones***
-- [ ] HuMo-1.7B
+- [ ] Prompts to Generate Demo of ***Faceless Thrones***
+- [ ] Checkpoint of HuMo-1.7B
+- [ ] Training Data
 
 ## ⚡️ Quickstart
 
@@ -50,7 +51,7 @@ conda install -c conda-forge ffmpeg
 ### Model Preparation
 | Models       | Download Link                                                                                                                                           |    Notes                      |
 |--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
-| HuMo-17B      | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main)   | Released before September 15
+| HuMo-17B      | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main)   | Release before September 15
 | HuMo-1.7B | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main) | To be released soon
 | Wan-2.1 | 🤗 [Huggingface](https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B) | VAE & Text encoder
 | Whisper-large-v3 |      🤗 [Huggingface](https://huggingface.co/openai/whisper-large-v3)          | Audio encoder
@@ -115,11 +116,14 @@ If you find this project useful for your research, please consider citing our [p
 
 ### BibTeX
 ```bibtex
-@article{chen2025HuMo,
-  title={Human-Centric Video Generation via Collaborative Multi-Modal Conditioning},
-  author={Chen, Liyang and Ma, Tianxiang and Liu, Jiawei and Li, Bingchuan and Chen, Zhuowei and Liu, Lijie and He, Xu and Li, Gen and He, Qian and Wu, Zhiyong},
-  journal={arXiv preprint arXiv:2502.11079},
-  year={2025}
+@misc{chen2025humo,
+      title={HuMo: Human-Centric Video Generation via Collaborative Multi-Modal Conditioning}, 
+      author={Liyang Chen and Tianxiang Ma and Jiawei Liu and Bingchuan Li and Zhuowei Chen and Lijie Liu and Xu He and Gen Li and Qian He and Zhiyong Wu},
+      year={2025},
+      eprint={2509.08519},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2509.08519}, 
 }
 ```
 
