@@ -49,7 +49,7 @@ conda install -c conda-forge ffmpeg
 ### Model Preparation
 | Models       | Download Link                                                                                                                                           |    Notes                      |
 |--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
-| HuMo-17B      | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main)   | Release before September 15
+| HuMo-17B      | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main)   | Supports 480P & 720P 
 | HuMo-1.7B | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main) | To be released soon
 | Wan-2.1 | 🤗 [Huggingface](https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B) | VAE & Text encoder
 | Whisper-large-v3 |      🤗 [Huggingface](https://huggingface.co/openai/whisper-large-v3)          | Audio encoder
@@ -126,4 +126,4 @@ If you find this project useful for your research, please consider citing our [p
 ```
 
 ## 📧 Contact
-If you have any comments or questions regarding this open-source project, please open a new issue or contact [Liyang Chen](lyangchen@outlook.com) and [Tianxiang Ma](https://tianxiangma.github.io/).
+If you have any comments or questions regarding this open-source project, please open a new issue or contact [Liyang Chen](https://leoniuschen.github.io/) and [Tianxiang Ma](https://tianxiangma.github.io/).
