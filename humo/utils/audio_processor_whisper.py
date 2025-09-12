@@ -5,19 +5,33 @@ It utilizes various libraries and models to perform tasks such as preprocessing,
 and audio separation. The class is initialized with configuration parameters and can process
 audio files using the provided models.
 '''
-import math
 import os
+import subprocess
 
 import librosa
 import numpy as np
 import torch
 from audio_separator.separator import Separator
-from einops import rearrange
 from transformers import WhisperModel, AutoFeatureExtractor
+import torch.nn.functional as F
 
-from data.audio.util import resample_audio
-from humo.data.audio.wav2vec import linear_interpolation_fps
 
+def linear_interpolation_fps(features, input_fps, output_fps, output_len=None):
+    features = features.transpose(1, 2)  # [1, C, T]
+    seq_len = features.shape[2] / float(input_fps)
+    if output_len is None:
+        output_len = int(seq_len * output_fps)
+    output_features = F.interpolate(features, size=output_len, align_corners=True, mode='linear')
+    return output_features.transpose(1, 2)
+
+
+def resample_audio(input_audio_file: str, output_audio_file: str, sample_rate: int):
+    p = subprocess.Popen([
+        "ffmpeg", "-y", "-v", "error", "-i", input_audio_file, "-ar", str(sample_rate), output_audio_file
+    ])
+    ret = p.wait()
+    assert ret == 0, "Resample audio failed!"
+    return output_audio_file
 
 class AudioProcessor:
     """
