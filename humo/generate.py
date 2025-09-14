@@ -433,8 +433,8 @@ class Generator():
         return feat_merge
     
     def parse_output(self, output):
-        latent = output["latent"][0]
-        mask = output["mask"]
+        latent = output[0]
+        mask = None
         return latent, mask
     
     def forward_tia(self, latents, timestep, t, step_change, arg_tia, arg_ti, arg_i, arg_null):

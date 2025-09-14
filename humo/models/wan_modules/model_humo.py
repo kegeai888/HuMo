@@ -241,25 +241,34 @@ class WanT2VCrossAttention(WanSelfAttention):
 
 class WanT2VCrossAttentionGather(WanSelfAttentionSepKVDim):
 
-    def forward(self, x, context, context_lens, seq_lens, grid_sizes, freqs, audio_seq_len):
+    def forward(self, x, context, context_lens, grid_sizes, freqs, audio_seq_len):
         r"""
         Args:
-            x(Tensor): Shape [B, L1, C]
-            context(Tensor): Shape [B, L2, C]
-            context_lens(Tensor): Shape [B]
+            x(Tensor): Shape [B, L1, C] - video tokens
+            context(Tensor): Shape [B, L2, C] - audio tokens with shape [B, frames*16, 1536]
+            context_lens(Tensor): Shape [B] - actually seq_lens from call (video sequence length)
+            grid_sizes(Tensor): Shape [B, 3] - video grid dimensions (F, H, W)
+            freqs(Tensor): RoPE frequencies
+            audio_seq_len(Tensor): Actual audio sequence length (frames * 16)
         """
         b, n, d = x.size(0), self.num_heads, self.head_dim
 
-        # compute query, key, value
         q = self.norm_q(self.q(x)).view(b, -1, n, d)
         k = self.norm_k(self.k(context)).view(b, -1, n, d)
         v = self.v(context).view(b, -1, n, d)
 
-        # compute attention
-        x = flash_attention(q, k, v, k_lens=context_lens)
+        # Handle video spatial structure
+        hlen_wlen = int(grid_sizes[0][1] * grid_sizes[0][2])
+        q = q.reshape(-1, hlen_wlen, n, d)
+        
+        # Handle audio temporal structure (16 tokens per frame)
+        k = k.reshape(-1, 16, n, d)
+        v = v.reshape(-1, 16, n, d)
 
-        # output
-        x = x.flatten(2)
+        # Cross-attention
+        x = flash_attention(q, k, v, k_lens=None)  # No masking for audio
+        
+        x = x.view(b, -1, n, d).flatten(2)
         x = self.o(x)
         return x
 

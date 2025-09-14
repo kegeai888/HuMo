@@ -135,8 +135,7 @@ def ulysses_dit_forward(
     
     # unpatchify
     x = self.unpatchify(x, grid_sizes)
-    return {"latent":[u.float() for u in x], 
-            "mask": None}
+    return [u.float() for u in x]
 
 
 def ulysses_attn_forward(
