@@ -25,13 +25,13 @@ HuMo is a unified, human-centric video generation framework designed to produce 
 ## 📑 Todo List
 - [x] Release Paper
 - [x] Checkpoint of HuMo-17B
+- [x] Checkpoint of HuMo-1.7B
 - [x] Inference Codes
   - [ ] Text-Image Input
   - [x] Text-Audio Input
   - [x] Text-Image-Audio Input
 - [x] Multi-GPU Inference
 - [ ] Prompts to Generate Demo of ***Faceless Thrones***
-- [ ] Checkpoint of HuMo-1.7B
 - [ ] Training Data
 
 ## ⚡️ Quickstart
@@ -49,8 +49,8 @@ conda install -c conda-forge ffmpeg
 ### Model Preparation
 | Models       | Download Link                                                                                                                                           |    Notes                      |
 |--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
-| HuMo-17B      | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main)   | Supports 480P & 720P 
-| HuMo-1.7B | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main) | To be released soon
+| HuMo-17B      | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main/HuMo-17B)   | Supports 480P & 720P 
+| HuMo-1.7B | 🤗 [Huggingface](https://huggingface.co/bytedance-research/HuMo/tree/main/HuMo-1.7B) | Lightweight on 32G GPU
 | Wan-2.1 | 🤗 [Huggingface](https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B) | VAE & Text encoder
 | Whisper-large-v3 |      🤗 [Huggingface](https://huggingface.co/openai/whisper-large-v3)          | Audio encoder
 | Audio separator |      🤗 [Huggingface](https://huggingface.co/huangjackson/Kim_Vocal_2)          | Remove background noise (optional)
@@ -85,6 +85,9 @@ generation:
   height: 720                   # Video height (e.g., 720 or 480).
   width: 1280                   # Video width (e.g., 1280 or 832).
 
+dit:
+  sp_size: <int>                # Sequence parallelism size. Set this equal to the number of used GPUs.
+
 diffusion:
   timesteps:
     sampling:
@@ -94,17 +97,19 @@ diffusion:
 #### 1. Text-Audio Input
 
 ``` sh
-bash infer_ta.sh
+bash scripts/infer_ta.sh  # infer with 17B model
+bash scripts/infer_ta_1_7B.sh  # infer with 1.7B model
 ```
 
 #### 2. Text-Image-Audio Input
 
 ``` sh
-bash infer_tia.sh
+bash scripts/infer_tia.sh  # infer with 17B model
+bash scripts/infer_tia_1_7B.sh  # infer with 1.7B model
 ```
 
 ## Acknowledgements
-Our work builds upon and is greatly inspired by several outstanding open-source projects, including [Phantom](https://github.com/Phantom-video/Phantom), [SeedVR](https://github.com/IceClear/SeedVR?tab=readme-ov-file), [MEMO](https://github.com/memoavatar/memo), [Hallo3](https://github.com/fudan-generative-vision/hallo3), [OpenHumanVid](https://github.com/fudan-generative-vision/OpenHumanVid), and [Whisper](https://github.com/openai/whisper). We sincerely thank the authors and contributors of these projects for generously sharing their excellent codes and ideas.
+Our work builds upon and is greatly inspired by several outstanding open-source projects, including [Phantom](https://github.com/Phantom-video/Phantom), [SeedVR](https://github.com/IceClear/SeedVR?tab=readme-ov-file), [MEMO](https://github.com/memoavatar/memo), [Hallo3](https://github.com/fudan-generative-vision/hallo3), [OpenHumanVid](https://github.com/fudan-generative-vision/OpenHumanVid), [OpenS2V-Nexus](https://github.com/PKU-YuanGroup/OpenS2V-Nexus), [ConsisID](https://github.com/PKU-YuanGroup/ConsisID) and [Whisper](https://github.com/openai/whisper). We sincerely thank the authors and contributors of these projects for generously sharing their excellent codes and ideas.
 
 ## ⭐ Citation
 
