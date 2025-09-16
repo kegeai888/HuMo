@@ -15,6 +15,15 @@ Tsinghua University | Intelligent Creation Team, ByteDance
 <img src="assets/teaser.png" width=95%>
 <p>
 
+## 🔥 Latest News
+
+* A Best-Practice Guide for HuMo will be released soon. Stay tuned.
+* Sep 16, 2025: 🔥🔥 We release the [1.7B weights](https://huggingface.co/bytedance-research/HuMo/tree/main/HuMo-1.7B), which generate a 480P video in 8 minutes on a 32G GPU. The visual quality is lower than that of the 17B model, but the audio-visual sync remains nearly unaffected.
+* Sep 13, 2025: 🔥🔥 The 17B model is merged into [ComfyUI-Wan](https://github.com/kijai/ComfyUI-WanVideoWrapper). Thank [kijai](https://github.com/kijai) for the update!
+* Sep 10, 2025: 🔥🔥 We release the [17B weights](https://huggingface.co/bytedance-research/HuMo/tree/main/HuMo-17B) and inference codes.
+* Sep 9, 2025: We release the [project page](https://phantom-video.github.io/HuMo/) and [Technique-Report](https://arxiv.org/abs/2509.08519/) of **HuMo** 
+
+
 ## ✨ Key Features
 HuMo is a unified, human-centric video generation framework designed to produce high-quality, fine-grained, and controllable human videos from multimodal inputs—including text, images, and audio. It supports strong text prompt following, consistent subject preservation, synchronized audio-driven motion.
 
@@ -31,6 +40,7 @@ HuMo is a unified, human-centric video generation framework designed to produce 
   - [x] Text-Audio Input
   - [x] Text-Image-Audio Input
 - [x] Multi-GPU Inference
+- [ ] Best-Practice Guide for HuMo
 - [ ] Prompts to Generate Demo of ***Faceless Thrones***
 - [ ] Training Data
 
