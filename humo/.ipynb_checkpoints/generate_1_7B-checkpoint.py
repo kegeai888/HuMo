@@ -99,6 +99,7 @@ def clever_format(nums, format="%.2f"):
 class Generator():
     def __init__(self, config: DictConfig):
         self.config = config.copy()
+        OmegaConf.set_readonly(self.config, True)
         self.logger = get_logger(self.__class__.__name__)
         
         init_torch(cudnn_benchmark=False)
@@ -431,62 +432,46 @@ class Generator():
         
         return feat_merge
     
-    def parse_output(self, output):
-        latent = output[0]
-        mask = None
-        return latent, mask
-    
-    def forward_tia(self, latents, timestep, t, step_change, arg_tia, arg_ti, arg_i, arg_null):
-        pos_tia, _ = self.parse_output(self.dit(
-            latents, t=timestep, **arg_tia
-            ))
-        torch.cuda.empty_cache()
-
-        pos_ti, _ = self.parse_output(self.dit(
-            latents, t=timestep, **arg_ti
-            ))
-        torch.cuda.empty_cache()
-
-        if t > step_change:
-            neg, _ = self.parse_output(self.dit(
-                latents, t=timestep, **arg_i
-                ))  # img included in null, same with official Wan-2.1
-            torch.cuda.empty_cache()
-
-            noise_pred = self.config.generation.scale_a * (pos_tia - pos_ti) + \
-                    self.config.generation.scale_t * (pos_ti - neg) + \
+    def forward_tia(self, latents, latents_ref, latents_ref_neg, timestep, arg_t, arg_ta, arg_null):
+        neg = self.dit(
+            [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_null
+            )[0]
+        
+        pos_t = self.dit(
+            [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_t
+            )[0]
+        pos_ta = self.dit(
+            [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_ta
+            )[0]
+        pos_tia = self.dit(
+            [torch.cat([latent[:,:-latent_ref.shape[1]], latent_ref], dim=1) for latent, latent_ref in zip(latents, latents_ref)], t=timestep, **arg_ta
+            )[0]
+        
+        noise_pred = self.config.generation.scale_i * (pos_tia - pos_ta) + \
+                    self.config.generation.scale_a * (pos_ta - pos_t) + \
+                    self.config.generation.scale_t * (pos_t - neg) + \
                     neg
-        else:
-            neg, _ = self.parse_output(self.dit(
-                latents, t=timestep, **arg_null
-                ))  # img not included in null
-            torch.cuda.empty_cache()
-
-            noise_pred = self.config.generation.scale_a * (pos_tia - pos_ti) + \
-                    (self.config.generation.scale_t - 2.0) * (pos_ti - neg) + \
-                    neg
+        
         return noise_pred
     
-    def forward_ta(self, latents, timestep, arg_ta, arg_t, arg_null):
-        pos_ta, _ = self.parse_output(self.dit(
-            latents, t=timestep, **arg_ta
-            ))
-        torch.cuda.empty_cache()
-
-        pos_t, _ = self.parse_output(self.dit(
-            latents, t=timestep, **arg_t
-            ))
-        torch.cuda.empty_cache()
-
-        neg, _ = self.parse_output(self.dit(
-                latents, t=timestep, **arg_null
-                ))
-        torch.cuda.empty_cache()
-            
+    def forward_ta(self, latents, latents_ref_neg, timestep, arg_t, arg_ta, arg_null):
+        neg = self.dit(
+            [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_null
+            )[0]
+        
+        pos_t = self.dit(
+            [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_t
+            )[0]
+        pos_ta = self.dit(
+            [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_ta
+            )[0]
+        
         noise_pred = self.config.generation.scale_a * (pos_ta - pos_t) + \
-                self.config.generation.scale_t * (pos_t - neg) + \
-                neg
+                    self.config.generation.scale_t * (pos_t - neg) + \
+                    neg
+        
         return noise_pred
+            
                     
     @torch.no_grad()
     def inference(self,
@@ -573,7 +558,7 @@ class Generator():
             yield
 
         no_sync = getattr(self.dit, 'no_sync', noop_no_sync)
-        step_change = self.config.generation.step_change # 980
+        # step_change = self.config.generation.step_change # 980
 
         # evaluation mode
         with amp.autocast(dtype=torch.bfloat16), torch.no_grad(), no_sync():
@@ -590,27 +575,10 @@ class Generator():
             # sample videos
             latents = noise
 
-            msk = torch.ones(4, target_shape[1], target_shape[2], target_shape[3], device=get_device())
-            msk[:,:-latents_ref[0].shape[1]] = 0
-
-            zero_vae = self.zero_vae[:, :(target_shape[1]-latents_ref[0].shape[1])].to(
-                device=get_device(), dtype=latents_ref[0].dtype)
-            y_c = torch.cat([
-                zero_vae,
-                latents_ref[0]
-                ], dim=1)
-            y_c = [torch.concat([msk, y_c])]
-
-            y_null = self.zero_vae[:, :target_shape[1]].to(
-                device=get_device(), dtype=latents_ref[0].dtype)
-            y_null = [torch.concat([msk, y_null])]
-
-            arg_null = {'seq_len': seq_len, 'audio': audio_emb_neg, 'y': y_null, 'context': context_null}
-            arg_t = {'seq_len': seq_len, 'audio': audio_emb_neg, 'y': y_null, 'context': context}
-            arg_i = {'seq_len': seq_len, 'audio': audio_emb_neg, 'y': y_c, 'context': context_null}
-            arg_ti = {'seq_len': seq_len, 'audio': audio_emb_neg, 'y': y_c, 'context': context}
-            arg_ta = {'seq_len': seq_len, 'audio': audio_emb, 'y': y_null, 'context': context}
-            arg_tia = {'seq_len': seq_len, 'audio': audio_emb, 'y': y_c, 'context': context}
+            # referene image在下面的输入中手动指定, 不在arg中指定
+            arg_ta = {'context': context, 'seq_len': seq_len, 'audio': audio_emb}
+            arg_t = {'context': context, 'seq_len': seq_len, 'audio': audio_emb_neg}
+            arg_null = {'context': context_null, 'seq_len': seq_len, 'audio': audio_emb_neg}
             
             torch.cuda.empty_cache()
             self.dit.to(device=get_device())
@@ -619,10 +587,9 @@ class Generator():
                 timestep = torch.stack(timestep)
 
                 if self.config.generation.mode == "TIA":
-                    noise_pred = self.forward_tia(latents, timestep, t, step_change, 
-                                                  arg_tia, arg_ti, arg_i, arg_null)
+                    noise_pred = self.forward_tia(latents, latents_ref, latents_ref_neg, timestep, arg_t, arg_ta, arg_null)
                 elif self.config.generation.mode == "TA":
-                    noise_pred = self.forward_ta(latents, timestep, arg_ta, arg_t, arg_null)
+                    noise_pred = self.forward_ta(latents, latents_ref_neg, timestep, arg_t, arg_ta, arg_null)
                 else:
                     raise ValueError(f"Unsupported generation mode: {self.config.generation.mode}")
 
@@ -710,8 +677,6 @@ class Generator():
             del video, prompt
             torch.cuda.empty_cache()
             gc.collect()
-
-            return pathname
             
 
     def save_sample(self, *, sample: torch.Tensor, audio_path: str, itemname: str):
@@ -742,40 +707,6 @@ class Generator():
             raise ValueError
         return pathname
     
-
-    def update_generation_config(self, **kwargs):
-        """动态更新生成配置"""
-        for key, value in kwargs.items():
-            if hasattr(self.config.generation, key):
-                setattr(self.config.generation, key, value)
-                self.logger.info(f"更新配置 generation.{key}: {value}")
-            else:
-                self.logger.warning(f"配置项 generation.{key} 不存在")
-    
-    def update_config(self, **kwargs):
-        """动态更新任意配置项，支持嵌套路径"""
-        for key, value in kwargs.items():
-            if '.' in key:
-                # 处理嵌套配置，如 'diffusion.timesteps.sampling.steps'
-                parts = key.split('.')
-                config_obj = self.config
-                for part in parts[:-1]:
-                    if hasattr(config_obj, part):
-                        config_obj = getattr(config_obj, part)
-                    else:
-                        self.logger.warning(f"配置路径 {key} 不存在")
-                        break
-                else:
-                    # 设置最后一个属性
-                    setattr(config_obj, parts[-1], value)
-                    self.logger.info(f"更新配置 {key}: {value}")
-            else:
-                # 处理顶级配置
-                if hasattr(self.config, key):
-                    setattr(self.config, key, value)
-                    self.logger.info(f"更新配置 {key}: {value}")
-                else:
-                    self.logger.warning(f"配置项 {key} 不存在")
 
     def prepare_positive_prompts(self):
         pos_prompts = self.config.generation.positive_prompt

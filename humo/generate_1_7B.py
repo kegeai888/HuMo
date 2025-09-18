@@ -99,7 +99,6 @@ def clever_format(nums, format="%.2f"):
 class Generator():
     def __init__(self, config: DictConfig):
         self.config = config.copy()
-        OmegaConf.set_readonly(self.config, True)
         self.logger = get_logger(self.__class__.__name__)
         
         init_torch(cudnn_benchmark=False)
@@ -120,19 +119,26 @@ class Generator():
 
     def configure_models(self):
         self.configure_dit_model(device="cpu")
+        self.logger.info("DIT模型配置完成")
         self.configure_vae_model()
+        self.logger.info("VAE模型配置完成")
         if self.config.generation.get('extract_audio_feat', False):
             self.configure_wav2vec(device="cpu")
         self.configure_text_model(device="cpu")
+        self.logger.info("Text模型配置完成")
 
         # Initialize fsdp.
         self.configure_dit_fsdp_model()
+        self.logger.info("DIT FSDP模型配置完成")
         self.configure_text_fsdp_model()
+        self.logger.info("Text FSDP模型配置完成")
+
+        self.logger.info("所有模型配置完成")
     
     def configure_dit_model(self, device=get_device()):
-
-        init_unified_parallel(self.config.dit.sp_size)
-        self.sp_size = get_unified_parallel_world_size()
+        # 1.7B模型不使用分布式，直接设置为单机模式
+        self.sp_size = 1
+        print("🔧 1.7B模型：使用单机模式，禁用分布式功能")
         
         # Create dit model.
         init_device = "meta"
@@ -143,15 +149,29 @@ class Generator():
 
         # Load dit checkpoint.
         path = self.config.dit.checkpoint_dir
-        if path.endswith(".pth"):
+        
+        # Check if it's a 1.7B model directory (contains ema.pth)
+        ema_pth_path = os.path.join(path, "ema.pth")
+        if os.path.exists(ema_pth_path):
+            # Load 1.7B model from ema.pth
+            state = torch.load(ema_pth_path, map_location=device, mmap=True)
+            missing_keys, unexpected_keys = self.dit.load_state_dict(state, strict=False, assign=True)
+            self.logger.info(f"[RANK:{get_global_rank()}] "
+                f"dit loaded from {ema_pth_path}. "
+                f"Missing keys: {len(missing_keys)}, "
+                f"Unexpected keys: {len(unexpected_keys)}"
+            )
+        elif path.endswith(".pth"):
+            # Direct .pth file path
             state = torch.load(path, map_location=device, mmap=True)
             missing_keys, unexpected_keys = self.dit.load_state_dict(state, strict=False, assign=True)
-            self.logger.info(
+            self.logger.info(f"[RANK:{get_global_rank()}] "
                 f"dit loaded from {path}. "
                 f"Missing keys: {len(missing_keys)}, "
                 f"Unexpected keys: {len(unexpected_keys)}"
             )
         else:
+            # Load safetensors format (17B model)
             from safetensors.torch import load_file
             import json
             def load_custom_sharded_weights(model_dir, base_name, device=device):
@@ -181,6 +201,7 @@ class Generator():
         )
     
     def configure_vae_model(self, device=get_device()):
+        self.logger.info("配置VAE模型...")
         self.vae_stride = self.config.vae.vae_stride
         self.vae = WanVAE(
             vae_pth=self.config.vae.checkpoint,
@@ -194,6 +215,7 @@ class Generator():
             raise ValueError(f"Unsupported height {self.config.generation.height} for zero-vae.")
     
     def configure_wav2vec(self, device=get_device()):
+        self.logger.info("配置Wav2Vec模型...")
         audio_separator_model_file = self.config.audio.vocal_separator
         wav2vec_model_path = self.config.audio.wav2vec_model
 
@@ -209,6 +231,7 @@ class Generator():
         )
 
     def configure_text_model(self, device=get_device()):
+        self.logger.info("配置Text模型...")
         self.text_encoder = T5EncoderModel(
             text_len=self.config.dit.model.text_len,
             dtype=torch.bfloat16,
@@ -219,6 +242,7 @@ class Generator():
 
     
     def configure_dit_fsdp_model(self):
+        self.logger.info("配置DIT FSDP模型...")
         from humo.models.wan_modules.model_humo import WanAttentionBlock
 
         dit_blocks = (WanAttentionBlock,)
@@ -265,6 +289,7 @@ class Generator():
 
 
     def configure_text_fsdp_model(self):
+        self.logger.info("配置Text FSDP模型...")
         # If FSDP is not enabled, put text_encoder to GPU and return.
         if not self.config.text.fsdp.enabled:
             self.text_encoder.to(get_device())
@@ -309,6 +334,7 @@ class Generator():
 
 
     def load_image_latent_ref_id(self, path: str, size, device):
+        self.logger.info("加载图像隐变量...")
         # Load size.
         h, w = size[1], size[0]
 
@@ -392,6 +418,7 @@ class Generator():
             return img_vae_latent
     
     def get_audio_emb_window(self, audio_emb, frame_num, frame0_idx, audio_shift=2):
+        self.logger.info("获取音频隐变量窗口...")
         zero_audio_embed = torch.zeros((audio_emb.shape[1], audio_emb.shape[2]), dtype=audio_emb.dtype, device=audio_emb.device)
         zero_audio_embed_3 = torch.zeros((3, audio_emb.shape[1], audio_emb.shape[2]), dtype=audio_emb.dtype, device=audio_emb.device)  # device=audio_emb.device
         iter_ = 1 + (frame_num - 1) // 4
@@ -418,6 +445,7 @@ class Generator():
         return audio_emb_wind, ed - audio_shift
     
     def audio_emb_enc(self, audio_emb, wav_enc_type="whisper"):
+        self.logger.info("编码音频隐变量...")
         if wav_enc_type == "wav2vec":
             feat_merge = audio_emb
         elif wav_enc_type == "whisper":
@@ -433,6 +461,7 @@ class Generator():
         return feat_merge
     
     def forward_tia(self, latents, latents_ref, latents_ref_neg, timestep, arg_t, arg_ta, arg_null):
+        self.logger.debug("前向传播TIA...")
         neg = self.dit(
             [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_null
             )[0]
@@ -455,6 +484,7 @@ class Generator():
         return noise_pred
     
     def forward_ta(self, latents, latents_ref_neg, timestep, arg_t, arg_ta, arg_null):
+        self.logger.info("前向传播TA...")
         neg = self.dit(
             [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_null
             )[0]
@@ -488,7 +518,7 @@ class Generator():
                  offload_model=True,
                  device = get_device(),
         ):
-
+        self.logger.info("推理...")
         self.vae.model.to(device=device)
         if img_path is not None:
             latents_ref = self.load_image_latent_ref_id(img_path, size, device)
@@ -511,7 +541,8 @@ class Generator():
                 self.logger.info("使用预先提取好的音频特征: %s", audio_emb_path)
         else:
             audio_emb = torch.zeros(frame_num, 5, 1280).to(device)
-            
+        
+        # 如果frame_num为-1，则根据音频长度计算帧数
         frame_num = frame_num if frame_num != -1 else audio_length
         frame_num = 4 * ((frame_num - 1) // 4) + 1
         audio_emb, _ = self.get_audio_emb_window(audio_emb, frame_num, frame0_idx=0)
@@ -629,6 +660,7 @@ class Generator():
 
 
     def inference_loop(self):
+        self.logger.info("推理循环...")
         gen_config = self.config.generation
         pos_prompts = self.prepare_positive_prompts()
         
@@ -677,9 +709,12 @@ class Generator():
             del video, prompt
             torch.cuda.empty_cache()
             gc.collect()
+
+            return pathname
             
 
     def save_sample(self, *, sample: torch.Tensor, audio_path: str, itemname: str):
+        self.logger.info("保存样本...")
         gen_config = self.config.generation
         # Prepare file path.
         extension = ".mp4" if sample.ndim == 4 else ".png"
@@ -708,7 +743,42 @@ class Generator():
         return pathname
     
 
+    def update_generation_config(self, **kwargs):
+        """动态更新生成配置"""
+        for key, value in kwargs.items():
+            if hasattr(self.config.generation, key):
+                setattr(self.config.generation, key, value)
+                self.logger.info(f"更新配置 generation.{key}: {value}")
+            else:
+                self.logger.warning(f"配置项 generation.{key} 不存在")
+    
+    def update_config(self, **kwargs):
+        """动态更新任意配置项，支持嵌套路径"""
+        for key, value in kwargs.items():
+            if '.' in key:
+                # 处理嵌套配置，如 'diffusion.timesteps.sampling.steps'
+                parts = key.split('.')
+                config_obj = self.config
+                for part in parts[:-1]:
+                    if hasattr(config_obj, part):
+                        config_obj = getattr(config_obj, part)
+                    else:
+                        self.logger.warning(f"配置路径 {key} 不存在")
+                        break
+                else:
+                    # 设置最后一个属性
+                    setattr(config_obj, parts[-1], value)
+                    self.logger.info(f"更新配置 {key}: {value}")
+            else:
+                # 处理顶级配置
+                if hasattr(self.config, key):
+                    setattr(self.config, key, value)
+                    self.logger.info(f"更新配置 {key}: {value}")
+                else:
+                    self.logger.warning(f"配置项 {key} 不存在")
+
     def prepare_positive_prompts(self):
+        self.logger.info("准备正面提示...")
         pos_prompts = self.config.generation.positive_prompt
         if pos_prompts.endswith(".json"):
             pos_prompts = prepare_json_dataset(pos_prompts)

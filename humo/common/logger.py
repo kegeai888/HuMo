@@ -19,19 +19,33 @@ Logging utility functions.
 import logging
 import sys
 from typing import Optional
+import colorlog
 
 from common.distributed import get_global_rank, get_local_rank, get_world_size
 
 _default_handler = logging.StreamHandler(sys.stdout)
-_default_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s "
-        + (f"[Rank:{get_global_rank()}]" if get_world_size() > 1 else "")
-        + (f"[LocalRank:{get_local_rank()}]" if get_world_size() > 1 else "")
-        + "[%(threadName).12s][%(name)s][%(levelname).5s] "
-        + "%(message)s"
-    )
+
+# 创建彩色格式化器
+color_formatter = colorlog.ColoredFormatter(
+    "%(log_color)s%(asctime)s "
+    + (f"[Rank:{get_global_rank()}]" if get_world_size() > 1 else "")
+    + (f"[LocalRank:{get_local_rank()}]" if get_world_size() > 1 else "")
+    + "[%(threadName).12s][%(name)s][%(levelname).5s] "
+    + "%(reset)s%(log_color)s%(message)s",
+    datefmt=None,
+    reset=True,
+    log_colors={
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'red,bg_white',
+    },
+    secondary_log_colors={},
+    style='%'
 )
+
+_default_handler.setFormatter(color_formatter)
 
 
 def get_logger(name: Optional[str] = None) -> logging.Logger:

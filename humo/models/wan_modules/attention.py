@@ -110,6 +110,11 @@ def flash_attention(
             causal=causal,
             deterministic=deterministic)[0].unflatten(0, (b, lq))
     else:
+        if not FLASH_ATTN_2_AVAILABLE:
+            # Fallback to standard attention when Flash Attention 2 is not available
+            warnings.warn("Flash Attention 2 not available, falling back to standard attention")
+            return attention(q, k, v, q_lens, k_lens, dropout_p, softmax_scale, q_scale, causal, window_size, deterministic, dtype)
+        
         assert FLASH_ATTN_2_AVAILABLE
         x = flash_attn.flash_attn_varlen_func(
             q=q,

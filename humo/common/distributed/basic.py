@@ -68,11 +68,30 @@ def init_torch(cudnn_benchmark=True):
     torch.backends.cudnn.allow_tf32 = True
     torch.backends.cudnn.benchmark = cudnn_benchmark
     torch.cuda.set_device(get_local_rank())
-    dist.init_process_group(
-        backend="nccl",
-        rank=get_global_rank(),
-        world_size=get_world_size(),
-    )
+    
+    # 设置分布式环境变量（如果未设置）
+    if "MASTER_ADDR" not in os.environ:
+        os.environ["MASTER_ADDR"] = "127.0.0.1"
+    if "MASTER_PORT" not in os.environ:
+        os.environ["MASTER_PORT"] = "29500"
+    
+    # 初始化分布式环境
+    try:
+        dist.init_process_group(
+            backend="nccl",
+            rank=get_global_rank(),
+            world_size=get_world_size(),
+        )
+    except Exception as e:
+        print(f"警告: 分布式初始化失败，将以单机模式运行: {e}")
+        # 如果分布式初始化失败，设置为单机模式
+        if not dist.is_initialized():
+            dist.init_process_group(
+                backend="gloo",  # 使用gloo作为后备
+                init_method="env://",
+                rank=0,
+                world_size=1,
+            )
 
 
 def convert_to_ddp(module: torch.nn.Module, **kwargs) -> DistributedDataParallel:
