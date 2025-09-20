@@ -42,10 +42,27 @@ HuMo是一个统一的、以人为中心的视频生成框架，旨在从多模�
 - [ ] HuMo电影级生成最佳实践指南
 - [ ] 生成***无面权游***演示的提示词
 - [ ] 训练数据
+## 科哥二改webui运行截图：
+![image.png](https://codewithgpu-image-1310972338.cos.ap-beijing.myqcloud.com/212292-548949436-YmVQu1ZlQNX8lItItbgh.png)
+![image.png](https://codewithgpu-image-1310972338.cos.ap-beijing.myqcloud.com/212292-967734830-cM2VzjUWtA6r3gXohgoK.png)
+![image.png](https://codewithgpu-image-1310972338.cos.ap-beijing.myqcloud.com/212292-561023803-UrfrWQsLigXhUkGM0HBm.png)
+![image.png](https://codewithgpu-image-1310972338.cos.ap-beijing.myqcloud.com/212292-707651691-KDeg2PPa0kqSYsiOFV4r.png)
+![image.png](https://codewithgpu-image-1310972338.cos.ap-beijing.myqcloud.com/212292-672044115-o8K33GSDCIjDBC004gdz.png)
+![image.png](https://codewithgpu-image-1310972338.cos.ap-beijing.myqcloud.com/212292-376963800-6EYZgSPaE3eHglSzcenB.png)
 
 ## ⚡️ 快速开始
-
-### 安装环境
+### 本仓库安装环境：
+```
+(py310) root@ada2076d9480:/workspace/HuMo# nvcc -V
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Wed_Jan_15_19:20:09_PST_2025
+Cuda compilation tools, release 12.8, V12.8.61
+Build cuda_12.8.r12.8/compiler.35404655_0
+(py310) root@ada2076d9480:/workspace/HuMo# python -V
+Python 3.10.16
+```
+### 安装环境【官方】
 ```
 conda create -n humo python=3.11
 conda activate humo
@@ -116,6 +133,11 @@ bash scripts/infer_ta_1_7B.sh  # 使用1.7B模型推理
 bash scripts/infer_tia.sh  # 使用17B模型推理
 bash scripts/infer_tia_1_7B.sh  # 使用1.7B模型推理
 ```
+## webui 运行方式
+``` sh
+bash start_app.sh
+```
+
 
 ## 致谢
 我们的工作建立在并受到几个优秀开源项目的极大启发，包括[Phantom](https://github.com/Phantom-video/Phantom)、[SeedVR](https://github.com/IceClear/SeedVR?tab=readme-ov-file)、[MEMO](https://github.com/memoavatar/memo)、[Hallo3](https://github.com/fudan-generative-vision/hallo3)、[OpenHumanVid](https://github.com/fudan-generative-vision/OpenHumanVid)、[OpenS2V-Nexus](https://github.com/PKU-YuanGroup/OpenS2V-Nexus)、[ConsisID](https://github.com/PKU-YuanGroup/ConsisID)和[Whisper](https://github.com/openai/whisper)。我们衷心感谢这些项目的作者和贡献者慷慨分享他们优秀的代码和想法。
@@ -140,4 +162,5 @@ bash scripts/infer_tia_1_7B.sh  # 使用1.7B模型推理
 ```
 
 ## 📧 联系方式
+
 如果您对这个开源项目有任何意见或问题，请提出新的issue或联系[Liyang Chen](https://leoniuschen.github.io/)和[Tianxiang Ma](https://tianxiangma.github.io/)。
