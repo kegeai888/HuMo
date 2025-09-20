@@ -15,9 +15,9 @@ NC='\033[0m' # No Color
 # 应用配置
 APP_NAME="HuMo视频生成器"
 APP_PORT=7860
-CONDA_ENV="humo"
+CONDA_ENV="py310"
 APP_SCRIPT="app.py"
-PROJECT_DIR="/workspace/HuMo"
+PROJECT_DIR="/root/HuMo"
 
 # 输出带颜色的信息
 print_info() {
@@ -268,7 +268,7 @@ show_help() {
     echo "选项:"
     echo "  -h, --help     显示此帮助信息"
     echo "  -p, --port     指定端口号 (默认: 7860)"
-    echo "  -e, --env      指定conda环境名 (默认: humo)"
+    echo "  -e, --env      指定conda环境名 (默认: py310)"
     echo "  --force-kill   强制杀死占用端口的进程"
     echo ""
     echo "示例:"
