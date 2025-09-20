@@ -567,6 +567,11 @@ def create_interface():
                 <h1 style="font-size: 3.5em; margin-bottom: 15px; font-weight: 700;">🎬 HuMo 视频生成器</h1>
                 <p style="font-size: 1.3em; opacity: 0.95; margin: 5px 0;">基于协作多模态条件的人体中心视频生成</p>
                 <p style="font-size: 1.1em; opacity: 0.85; margin-top: 15px;">✨ 支持文本、图像、音频多种输入模式的智能视频生成</p>
+                <p style="font-size: 1.1em; opacity: 0.85; margin-top: 15px; color: white;">
+    ✨ 二次开发构建 By：科哥 
+    <a href="https://github.com/kegeai888/HuMo" style="color: white;">欢迎 start</a>
+</p>
+
             </div>
             """)
 
