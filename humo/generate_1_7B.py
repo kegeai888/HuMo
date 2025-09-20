@@ -484,7 +484,7 @@ class Generator():
         return noise_pred
     
     def forward_ta(self, latents, latents_ref_neg, timestep, arg_t, arg_ta, arg_null):
-        self.logger.info("前向传播TA...")
+        self.logger.debug("前向传播TA...")
         neg = self.dit(
             [torch.cat([latent[:,:-latent_ref_neg.shape[1]], latent_ref_neg], dim=1) for latent, latent_ref_neg in zip(latents, latents_ref_neg)], t=timestep, **arg_null
             )[0]

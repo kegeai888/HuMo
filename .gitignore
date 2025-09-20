@@ -5,3 +5,16 @@ __pycache__
 *.log
 /weights
 /output
+
+# 敏感文件
+token.txt
+*.token
+.env
+.env.local
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# 临时文件
+*.tmp
+*.bak

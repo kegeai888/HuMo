@@ -106,15 +106,6 @@ class HuMoGradioApp:
         progress_value = min(99, self.progress)
         return progress_value
     
-    def update_progress(self) -> float:
-        """更新进度条"""
-        if not self.is_generating:
-            return 0
-        self.progress += 1
-        # 模拟进度，最大值为99%，留1%给最终处理
-        progress_value = min(99, self.progress)
-        return progress_value
-    
     def generate_video(
         self,
         prompt: str,
@@ -392,10 +383,16 @@ def create_interface():
                                 )
                             
                             resolution = gr.Dropdown(
-                                choices=["720P (720x1280)", "480P (480x832)"],
-                                value="720P (720x1280)",
+                                choices=[
+                                    "720P 竖屏 (720x1280)", 
+                                    "720P 横屏 (1280x720)",
+                                    "480P 竖屏 (480x832)", 
+                                    "480P 横屏 (832x480)",
+                                    "1024P 方形 (1024x1024)"
+                                ],
+                                value="720P 竖屏 (720x1280)",
                                 label="视频分辨率",
-                                info="720P质量更好，480P速度更快"
+                                info="720P质量更好，480P速度更快；竖屏适合手机观看，横屏适合电脑观看，方形适合社交媒体"
                             )
                         
                         # 生成参数折叠面板
@@ -455,10 +452,16 @@ def create_interface():
             progress(0, desc="准备生成...")
             
             # 解析分辨率
-            if "720P" in resolution:
+            if "720P 横屏" in resolution:
                 height, width = 720, 1280
-            elif "480P" in resolution:
+            elif "720P 竖屏" in resolution:
+                height, width = 1280, 720
+            elif "480P 横屏" in resolution:
                 height, width = 480, 832
+            elif "480P 竖屏" in resolution:
+                height, width = 832, 480
+            elif "1024P 方形" in resolution:
+                height, width = 1024, 1024
             else:
                 height, width = 720, 1280  # 默认值
             
